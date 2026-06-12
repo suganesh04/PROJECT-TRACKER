@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Project Tracker</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --border: #e5e4e0;
+    --text: #1a1a1a;
+    --text-muted: #666662;
+    --accent: #1a1a1a;
+    --accent-soft: #f0f0ee;
+    --radius: 12px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 24px 24px;
+    text-align: center;
+  }
+
+  header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+
+  header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .main {
+    flex: 1;
+    max-width: 860px;
+    width: 100%;
+    margin: 32px auto;
+    padding: 0 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+
+  .card-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .form-grid .full { grid-column: 1 / -1; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"] {
+    width: 100%;
+    padding: 10px 13px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -webkit-appearance: none;
+  }
+
+  input:focus {
+    border-color: #aaa;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+    background: #fff;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    border: none;
+  }
+
+  button:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-secondary {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid var(--border);
+  }
+
+  .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  button:hover { opacity: 0.85; }
+
+  /* Table */
+  #tableArea { margin-top: 0; }
+
+  .tbl-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+  }
+
+  .empty-state svg {
+    display: block;
+    margin: 0 auto 16px;
+    opacity: 0.25;
+  }
+
+  .empty-state p { font-size: 14px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  th {
+    background: var(--bg);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 0;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  td input {
+    width: 100%;
+    padding: 11px 12px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    color: var(--text);
+    font-family: inherit;
+  }
+
+  td input:focus {
+    background: #f9f9f7;
+  }
+
+  .date-cell {
+    padding: 11px 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .step-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--accent-soft);
+    color: var(--text-muted);
+    margin-right: 6px;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  /* Animations */
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .anim-row {
+    opacity: 0;
+    animation: fadeSlideIn 0.35s ease forwards;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: #1a1a1a;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    margin-top: auto;
+  }
+
+  footer span { font-weight: 600; color: var(--text); }
+
+  @media (max-width: 560px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid .full { grid-column: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Project Tracker 🎯</h1>
+  <p>Plan your project timeline with working-day precision</p>
+</header>
+
+<div class="main">
+
+  <div class="card">
+    <div class="card-label">Project Setup</div>
+    <div class="form-grid">
+      <div class="full">
+        <label for="projectName">Project name</label>
+        <input id="projectName" type="text" placeholder="e.g. Website Redesign Q3"/>
+      </div>
+      <div>
+        <label for="startDate">Start date</label>
+        <input id="startDate" type="date"/>
+      </div>
+      <div>
+        <label for="totalDays">Total working days</label>
+        <input id="totalDays" type="number" min="1" placeholder="e.g. 20"/>
+      </div>
+      <div class="full">
+        <label for="stepsCount">Number of steps</label>
+        <input id="stepsCount" type="number" min="1" placeholder="e.g. 5"/>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary btn-icon" onclick="generate()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 12 5 19 12"/><line x1="12" y1="5" x2="12" y2="19"/></svg>
+        Generate timeline
+      </button>
+      <button class="btn-secondary" onclick="recalculate()">Recalculate</button>
+    </div>
+  </div>
+
+  <div class="card" id="outputCard">
+    <div class="card-label" id="projectTitle">Timeline</div>
+    <div class="tbl-actions" id="tblActions" style="display:none">
+      <button class="btn-secondary btn-icon" onclick="copyTable()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy table
+      </button>
+      <button class="btn-secondary btn-icon" onclick="emailDraft()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Copy with email draft
+      </button>
+    </div>
+    <div id="tableArea">
+      <div class="empty-state">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <p>Fill in the project details above and click <strong>Generate timeline</strong></p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>Made by <span>Suganeshwaran Kumarasamy</span></footer>
+
+<script>
+let timelineData = [];
+
+function isWeekend(date) {
+  return date.getDay() === 0 || date.getDay() === 6;
+}
+
+function normalizeStartDate(date) {
+  let d = new Date(date);
+  while (isWeekend(d)) d.setDate(d.getDate() + 1);
+  return d;
+}
+
+function addWorkingDays(startDate, days) {
+  let date = new Date(startDate);
+  let added = 0;
+  while (added < days) {
+    date.setDate(date.getDate() + 1);
+    if (!isWeekend(date)) added++;
+  }
+  return date;
+}
+
+function formatDate(date) {
+  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function generate() {
+  const rawDate = document.getElementById("startDate").value;
+  const totalDays = parseInt(document.getElementById("totalDays").value);
+  const stepsCount = parseInt(document.getElementById("stepsCount").value);
+
+  if (!rawDate || !totalDays || !stepsCount) {
+    showToast("Please fill in all fields");
+    return;
+  }
+
+  let startDate = normalizeStartDate(new Date(rawDate));
+
+  const baseDays = Math.floor(totalDays / stepsCount);
+  const remainder = totalDays % stepsCount;
+
+  timelineData = [];
+  let current = new Date(startDate);
+
+  for (let i = 0; i < stepsCount; i++) {
+    const days = baseDays + (i < remainder ? 1 : 0);
+    current = addWorkingDays(current, i === 0 ? days - 1 : days);
+    timelineData.push({ step: `Step ${i + 1}`, days, date: new Date(current), remarks: "" });
+  }
+
+  renderTable();
+
+  const name = document.getElementById("projectName").value;
+  if (name) {
+    document.getElementById("projectTitle").textContent = name;
+  }
+}
+
+function recalculate() {
+  if (!timelineData.length) { generate(); return; }
+
+  const rawDate = document.getElementById("startDate").value;
+  if (!rawDate) { showToast("Please set a start date"); return; }
+
+  let current = normalizeStartDate(new Date(rawDate));
+
+  timelineData.forEach((row, i) => {
+    current = addWorkingDays(current, i === 0 ? row.days - 1 : row.days);
+    row.date = new Date(current);
+  });
+
+  renderTable();
+}
+
+function renderTable() {
+  document.getElementById("tblActions").style.display = "flex";
+
+  let html = `<table id="timelineTable">
+    <colgroup>
+      <col style="width:26%"><col style="width:15%"><col style="width:22%"><col style="width:37%">
+    </colgroup>
+    <thead><tr>
+      <th>Step</th><th>Days</th><th>Target date</th><th>Remarks</th>
+    </tr></thead><tbody>`;
+
+  timelineData.forEach((row, i) => {
+    html += `<tr class="anim-row" style="animation-delay:${i * 60}ms">
+      <td><input value="${row.step}" onchange="updateStep(${i}, this.value)"/></td>
+      <td><input type="number" value="${row.days}" onchange="updateDays(${i}, this.value)" style="text-align:center"/></td>
+      <td><div class="date-cell">${formatDate(row.date)}</div></td>
+      <td><input value="${row.remarks}" placeholder="Add note…" onchange="updateRemarks(${i}, this.value)"/></td>
+    </tr>`;
+  });
+
+  html += `</tbody></table>`;
+  document.getElementById("tableArea").innerHTML = html;
+}
+
+function updateStep(i, v) { timelineData[i].step = v; }
+function updateDays(i, v) { timelineData[i].days = parseInt(v) || 0; }
+function updateRemarks(i, v) { timelineData[i].remarks = v; }
+
+function buildCleanTableHTML() {
+  let html = `<table border="1" style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:13px;">
+    <tr style="background:#f5f5f5;">
+      <th style="padding:8px 12px;">Step</th>
+      <th style="padding:8px 12px;">Days needed</th>
+      <th style="padding:8px 12px;">Target date</th>
+      <th style="padding:8px 12px;">Remarks</th>
+    </tr>`;
+  timelineData.forEach(r => {
+    html += `<tr>
+      <td style="padding:8px 12px;">${r.step}</td>
+      <td style="padding:8px 12px;text-align:center;">${r.days}</td>
+      <td style="padding:8px 12px;">${formatDate(r.date)}</td>
+      <td style="padding:8px 12px;">${r.remarks || ""}</td>
+    </tr>`;
+  });
+  html += `</table>`;
+  return html;
+}
+
+async function copyTable() {
+  if (!timelineData.length) { showToast("Generate a timeline first"); return; }
+  const html = buildCleanTableHTML();
+  try {
+    await navigator.clipboard.write([new ClipboardItem({
+      "text/html": new Blob([html], { type: "text/html" }),
+      "text/plain": new Blob([html.replace(/<[^>]*>/g, "")], { type: "text/plain" })
+    })]);
+    showToast("Table copied to clipboard ✓");
+  } catch { showToast("Copy failed — try a different browser"); }
+}
+
+async function emailDraft() {
+  if (!timelineData.length) { showToast("Generate a timeline first"); return; }
+  const projectName = document.getElementById("projectName").value || "the project";
+  const table = buildCleanTableHTML();
+  const emailHTML = `Dear Stakeholders,<br><br>
+I hope this email finds you well.<br><br>
+I would like to provide an update on the timeline for <b>${projectName}</b> and the planned completion dates for key deliverables.<br><br>
+<b>Project Timeline</b><br><br>
+${table}<br><br>
+We will continue to monitor progress closely and provide updates on any changes.<br><br>
+Thank you for your continued support and collaboration.<br><br>
+Best regards,`;
+
+  try {
+    await navigator.clipboard.write([new ClipboardItem({
+      "text/html": new Blob([emailHTML], { type: "text/html" }),
+      "text/plain": new Blob([emailHTML.replace(/<[^>]*>/g, "")], { type: "text/plain" })
+    })]);
+    showToast("Email draft copied to clipboard ✓");
+  } catch { showToast("Copy failed — try a different browser"); }
+}
+</script>
+
+</body>
+</html>
